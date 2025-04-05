@@ -18,6 +18,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'happy-dom',
+    reporters: 'verbose',
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html']
