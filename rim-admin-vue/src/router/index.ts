@@ -3,7 +3,7 @@ import { DynamicRouter } from '@/plugins/dynamic-router/DynamicRouter'
 import { withCache } from '@/plugins/dynamic-router//RouteCache'
 import type { IDynamicRouter } from '@/plugins/dynamic-router/types'
 import { inject } from 'vue'
-import { Emitter } from 'mitt'
+import type { Emitter } from 'mitt'
 
 const baseRouter = createRouter({
   history: createWebHistory(),
@@ -24,6 +24,9 @@ const authProvider = {
       }
       dynamicRouter.getEventBus().on('rim:auth-change', check)
     })
+  },
+  tryAutoLogin: () => {
+    return Promise.resolve(false)
   }
 }
 
@@ -35,8 +38,8 @@ const eventBusProvider = {
       on: (event: string, callback: () => void) => {
         emitter.on(event, callback)
       },
-      emit: (event: string) => {
-        emitter.emit(event)
+      emit: (type: string, event: Record<string, unknown>) => {
+        emitter.emit(type, event)
       }
     }
   }
@@ -46,6 +49,7 @@ const dynamicRouter = new DynamicRouter(baseRouter, {
   defaultRoutes: [
     {
       path: '/',
+      name: 'Root',
       redirect: '/home',
       meta: { requiresAuth: true }
     },
@@ -53,16 +57,6 @@ const dynamicRouter = new DynamicRouter(baseRouter, {
       path: '/login',
       name: 'Login',
       component: () => import('@/views/Login.vue'),
-      meta: { requiresAuth: false }
-    },
-    {
-      path: '/home',
-      component: () => import('@/views/HomeView.vue'),
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/about',
-      component: () => import('@/views/AboutView.vue'),
       meta: { requiresAuth: false }
     },
     {

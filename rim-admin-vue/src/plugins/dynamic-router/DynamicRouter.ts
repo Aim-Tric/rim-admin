@@ -4,7 +4,7 @@ import type {
   DynamicRouteOptions,
   RouteLoader,
   PermissionFilter,
-  AuthStateProvider,
+  AuthProvider,
   IDynamicRouter,
   EventBusProvider
 } from './types'
@@ -18,10 +18,10 @@ export class DynamicRouter implements IDynamicRouter {
   private isRoutesLoaded = ref(false)
   private defaultRoutesAdded = ref(false)
   private pendingNavigation: string | null = null
-  private authProvider: AuthStateProvider
+  private authProvider: AuthProvider
   private eventBusProvider: EventBusProvider
 
-  constructor(router: Router, options: DynamicRouteOptions = {}) {
+  constructor(router: Router, options: DynamicRouteOptions) {
     this.router = router
     this.authProvider = options.authProvider || this._createDefaultAuthProvider()
     this.eventBusProvider = options.eventBusProvider || this._createDefaultEventBusProvider()
@@ -49,7 +49,7 @@ export class DynamicRouter implements IDynamicRouter {
       this.isRoutesLoaded.value = true
       return filteredRoutes
     } catch (error) {
-      this.options.errorHandler?.(error as Error)
+      this.options.errorHandler?.(this, error as Error)
       throw error
     }
   }
@@ -70,45 +70,43 @@ export class DynamicRouter implements IDynamicRouter {
 
   public setupNavigationGuards() {
     this.router.beforeEach(async (to, from, next) => {
-      // 当路由未匹配且未登录时，重定向到登录页
-      if (to.matched.length === 0 && !this.authProvider.isAuthenticated()) {
-        return next('/login')
+
+      if (to.name !== 'Login') {
+        this.pendingNavigation = to.fullPath
       }
 
-      if (!this.isNeedAuth(to)) return next()
-
-      // 检查认证状态
-      if (!this.authProvider.isAuthenticated()) {
-        // 保存目标路由地址，但不包括登录页面本身
-        if (to.name !== 'Login') {
-          this.pendingNavigation = to.fullPath
-        }
-        return next('/login')
-      }
-
-      // 如果路由未加载，先加载路由
+      // 检查路由是否加载
       if (!this.isRoutesLoaded.value) {
-        try {
-          await this.loadRoutes()
-          this.handlePostLoadNavigation(to, next)
-        } catch (error) {
-          console.error('路由加载失败:', error)
-          return next('/error')
+        await this.loadRoutes()
+        this.handlePostLoadNavigation(to, next)
+      }
+
+      // 检查是否已经登录，如果没有则尝试从缓存中自动登录
+      if (!this.authProvider.isAuthenticated()) {
+        if (!await this.authProvider.tryAutoLogin()) {
+          // 登录失败，执行回调
+          this.authProvider.onAuthFailed?.(this)
         }
       }
+
+
+      // if did, check is need auth?
+      // if needed, check is auth? if not auth, redirect to login. if did, check is has permission? if not, redirect to no permission. if did, next.
+      // if not need auth, next.
 
       return next()
     })
   }
 
-  public getEventBus() {
-    return this.eventBusProvider.getEventBus()
-  }
+  public getEventBus = () => this.eventBusProvider.getEventBus()
 
-  private isRouteExists(route: RouteRecordRaw) {
-    return this.router.hasRoute(route.name!) ||
-      this.options.defaultRoutes?.some(r => r.name === route.name)
-  }
+  private isRouteExists = (route: RouteRecordRaw) =>
+    this.router.hasRoute(route.name!) || this.options.defaultRoutes?.some(r => r.name === route.name)
+
+  private isNeedAuth = (route: RouteLocationNormalized) =>
+    route.matched.some(record => {
+      return record.meta.requiresAuth === true
+    })
 
   private handlePostLoadNavigation(to: RouteLocationNormalized, next: any) {
     if (this.pendingNavigation) {
@@ -117,12 +115,6 @@ export class DynamicRouter implements IDynamicRouter {
       return next(target)
     }
     return next({ ...to, replace: true })
-  }
-
-  private isNeedAuth(route: RouteLocationNormalized) {
-    return route.matched.some(record => {
-      return record.meta.requiresAuth === true
-    })
   }
 
   private setupDefaultRoutes() {
@@ -136,10 +128,11 @@ export class DynamicRouter implements IDynamicRouter {
     }
   }
 
-  private _createDefaultAuthProvider(): AuthStateProvider {
+  private _createDefaultAuthProvider(): AuthProvider {
     return {
       isAuthenticated: () => false,
-      waitAuthReady: () => new Promise(() => { })
+      waitAuthReady: () => new Promise(() => { }),
+      tryAutoLogin: () => Promise.resolve(false)
     }
   }
 
