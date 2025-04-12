@@ -14,12 +14,12 @@ export interface Navigator {
   naviToLogin: () => void
   naviToNoPermission: () => void
   naviToError: () => void
-  naviToPending: () => void
 }
 
 export interface IDynamicRouter {
   attachPendingNavigation: () => void
   getEventBus: () => EventBus
+  getNavigator: () => Navigator
 }
 
 export interface AuthProvider {
@@ -38,6 +38,8 @@ export interface DynamicRouteOptions {
   defaultRoutes: RouteRecordRaw[];
   /** 认证状态提供器 */
   authProvider: AuthProvider
+  /** 自定义导航器 */
+  navigator?: Navigator
   /** 事件总线提供器 */
   eventBusProvider?: EventBusProvider
   /** 路由加载策略 */

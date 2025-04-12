@@ -60,6 +60,12 @@ const dynamicRouter = new DynamicRouter(baseRouter, {
       meta: { requiresAuth: false }
     },
     {
+      path: '/no-permission',
+      name: 'NoPermission',
+      component: () => import('@/views/NoPermission.vue'),
+      meta: { requiresAuth: false }
+    },
+    {
       path: '/:catchAll(.*)',
       component: () => import('@/views/NotFound.vue'),
       meta: { requiresAuth: false }
@@ -70,10 +76,10 @@ const dynamicRouter = new DynamicRouter(baseRouter, {
     return []
   }, { ttl: 60000 }),
   authProvider,
-  errorHandler: (err) => {
-    console.error('Route loading error:', err)
-    alert('Failed to load application routes')
-  }
+  errorHandler: (router, err) => {
+    router.getNavigator().naviToError()
+  },
+  eventBusProvider
 })
 
 export default dynamicRouter

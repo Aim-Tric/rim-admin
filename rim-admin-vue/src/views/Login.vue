@@ -2,11 +2,10 @@
 import { inject } from 'vue'
 import type { Emitter } from 'mitt'
 import { DynamicRouter } from '@/plugins/dynamic-router/DynamicRouter'
-import TheWelcome from '../components/TheWelcome.vue'
 
 const emitter = inject<Emitter<Record<string, unknown>>>('emitter')!
 const dynamicRouter = inject<DynamicRouter>('dynamicRouter')!
-dynamicRouter.loadWithAuthCheck()
+dynamicRouter.startAuthListener()
 
 const login = () => {
   localStorage.setItem('token', 'yes')
@@ -16,7 +15,11 @@ const login = () => {
 
 <template>
   <main>
-    <TheWelcome />
-    <button @click="login">登录</button>
+    <n-card title="登录">
+      卡片内容
+      <template #footer>
+        <button @click="login">登录</button>
+      </template>
+    </n-card>
   </main>
 </template>

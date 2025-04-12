@@ -1,5 +1,5 @@
 <template>
-  <n-result status="404" title="404 资源不存在" description="访问的页面不存在！">
+  <n-result status="403" title="403 无权限访问" description="权限不足，请与网站管理员确认！">
     <template #footer>
       <n-button @click="goBack">返回</n-button>
     </template>

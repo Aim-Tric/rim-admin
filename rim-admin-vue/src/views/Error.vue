@@ -1,5 +1,5 @@
 <template>
-  <n-result status="404" title="404 资源不存在" description="访问的页面不存在！">
+  <n-result status="500" title="500 服务器打了个盹" description="遇到错误了！">
     <template #footer>
       <n-button @click="goBack">返回</n-button>
     </template>

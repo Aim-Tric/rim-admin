@@ -6,7 +6,8 @@ import type {
   PermissionFilter,
   AuthProvider,
   IDynamicRouter,
-  EventBusProvider
+  EventBusProvider,
+  Navigator
 } from './types'
 
 const DEFAULT_LOADER: RouteLoader = () => Promise.resolve([])
@@ -20,11 +21,13 @@ export class DynamicRouter implements IDynamicRouter {
   private pendingNavigation: string | null = null
   private authProvider: AuthProvider
   private eventBusProvider: EventBusProvider
+  private navigator: Navigator
 
   constructor(router: Router, options: DynamicRouteOptions) {
     this.router = router
     this.authProvider = options.authProvider || this._createDefaultAuthProvider()
     this.eventBusProvider = options.eventBusProvider || this._createDefaultEventBusProvider()
+    this.navigator = options.navigator || this._createDefaultNavigator()
     this.options = {
       defaultRoutes: options.defaultRoutes || [],
       routeLoader: options.routeLoader || DEFAULT_LOADER,
@@ -77,8 +80,11 @@ export class DynamicRouter implements IDynamicRouter {
 
       // 检查路由是否加载
       if (!this.isRoutesLoaded.value) {
-        await this.loadRoutes()
-        this.handlePostLoadNavigation(to, next)
+        try {
+          await this.loadRoutes()
+          this.handlePostLoadNavigation(to, next)
+        } catch (error) {
+        }
       }
 
       // 检查是否已经登录，如果没有则尝试从缓存中自动登录
@@ -86,17 +92,26 @@ export class DynamicRouter implements IDynamicRouter {
         if (!await this.authProvider.tryAutoLogin()) {
           // 登录失败，执行回调
           this.authProvider.onAuthFailed?.(this)
+        } else {
+          if (!this.isRoutesLoaded.value) {
+            try {
+              await this.loadRoutes()
+              this.handlePostLoadNavigation(to, next)
+            } catch (error) {
+            }
+          }
         }
       }
 
-
-      // if did, check is need auth?
-      // if needed, check is auth? if not auth, redirect to login. if did, check is has permission? if not, redirect to no permission. if did, next.
-      // if not need auth, next.
+      if (this.isNeedAuth(to) && !this.authProvider.isAuthenticated()) {
+        this.navigator.naviToLogin()
+        return next(false)
+      }
 
       return next()
     })
   }
+  public getNavigator = () => this.navigator;
 
   public getEventBus = () => this.eventBusProvider.getEventBus()
 
@@ -142,6 +157,17 @@ export class DynamicRouter implements IDynamicRouter {
         on: () => { },
         emit: () => { }
       })
+    }
+  }
+
+  private _createDefaultNavigator(): Navigator {
+    return {
+      naviTo: (path: string) => {
+        this.router.push(path)
+      },
+      naviToLogin: () => this.router.push('/login'),
+      naviToNoPermission: () => this.router.push('/no-permission'),
+      naviToError: () => this.router.push('/error')
     }
   }
 
