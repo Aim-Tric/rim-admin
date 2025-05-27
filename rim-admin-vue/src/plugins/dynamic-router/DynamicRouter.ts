@@ -42,7 +42,7 @@ export class DynamicRouter implements IDynamicRouter {
     try {
       const loadedRoutes = await this.options.routeLoader!()
       const filteredRoutes = this.options.permissionFilter!(loadedRoutes)
-
+      console.log("加载路由2")
       filteredRoutes.forEach(route => {
         if (!this.isRouteExists(route)) {
           this.router.addRoute(route)
@@ -71,11 +71,29 @@ export class DynamicRouter implements IDynamicRouter {
     }
   }
 
+  /**
+   * 配置路由守卫
+   * 路由状态情况：
+   * 一、路由已加载：
+   *  1.路由有匹配，且有权限/无需登录/无需权限，放行
+   *  2.路由有匹配，已登录，但无权限，跳转无权限页面
+   *  3.路由有匹配，未登录，跳转登录页
+   *  4.路由无匹配，跳转NotFound页面
+   * 二、路由未加载：
+   *  1.尝试加载路由，加载成功，回到一.1判断
+   *  2.路由加载失败，已登录，跳转错误页面
+   *  3.路由加载失败，未登录，跳转登录页
+   */
   public setupNavigationGuards() {
+
     this.router.beforeEach(async (to, from, next) => {
 
       if (to.name !== 'Login') {
         this.pendingNavigation = to.fullPath
+      }
+      console.log(to)
+      if (to.name == 'Login' || to.name == 'Error') {
+        return next()
       }
 
       // 检查路由是否加载
@@ -84,6 +102,7 @@ export class DynamicRouter implements IDynamicRouter {
           await this.loadRoutes()
           this.handlePostLoadNavigation(to, next)
         } catch (error) {
+          this.navigator.naviToError(next)
         }
       }
 
@@ -91,23 +110,22 @@ export class DynamicRouter implements IDynamicRouter {
       if (!this.authProvider.isAuthenticated()) {
         if (!await this.authProvider.tryAutoLogin()) {
           // 登录失败，执行回调
-          this.authProvider.onAuthFailed?.(this)
+          this.authProvider.onAuthFailed(this)
         } else {
           if (!this.isRoutesLoaded.value) {
             try {
               await this.loadRoutes()
               this.handlePostLoadNavigation(to, next)
             } catch (error) {
+              this.navigator.naviToError(next)
             }
           }
         }
       }
 
       if (this.isNeedAuth(to) && !this.authProvider.isAuthenticated()) {
-        this.navigator.naviToLogin()
-        return next(false)
+        this.navigator.naviToLogin(next)
       }
-
       return next()
     })
   }
@@ -147,7 +165,8 @@ export class DynamicRouter implements IDynamicRouter {
     return {
       isAuthenticated: () => false,
       waitAuthReady: () => new Promise(() => { }),
-      tryAutoLogin: () => Promise.resolve(false)
+      tryAutoLogin: () => Promise.resolve(false),
+      onAuthFailed(_) { },
     }
   }
 
@@ -165,9 +184,9 @@ export class DynamicRouter implements IDynamicRouter {
       naviTo: (path: string) => {
         this.router.push(path)
       },
-      naviToLogin: () => this.router.push('/login'),
-      naviToNoPermission: () => this.router.push('/no-permission'),
-      naviToError: () => this.router.push('/error')
+      naviToLogin: (next) => next('Login'),
+      naviToNoPermission: (next) => next('NoPermission'),
+      naviToError: (next) => next('Error')
     }
   }
 

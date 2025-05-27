@@ -1,9 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { DynamicRouter } from '@/plugins/dynamic-router/DynamicRouter'
 import { withCache } from '@/plugins/dynamic-router//RouteCache'
-import type { IDynamicRouter } from '@/plugins/dynamic-router/types'
+import type { AuthProvider, IDynamicRouter } from '@/plugins/dynamic-router/types'
 import { inject } from 'vue'
 import type { Emitter } from 'mitt'
+
+import { info } from '@/api/User'
 
 const baseRouter = createRouter({
   history: createWebHistory(),
@@ -12,7 +14,7 @@ const baseRouter = createRouter({
 
 
 // 配置认证状态提供器
-const authProvider = {
+const authProvider: AuthProvider = {
   isAuthenticated: () => !!localStorage.getItem('token'),
   waitAuthReady: (dynamicRouter: IDynamicRouter) => {
     return new Promise<boolean>(resolve => {
@@ -27,6 +29,9 @@ const authProvider = {
   },
   tryAutoLogin: () => {
     return Promise.resolve(false)
+  },
+  onAuthFailed: (router) => {
+    router.getNavigator().naviTo('/login')
   }
 }
 
@@ -66,18 +71,25 @@ const dynamicRouter = new DynamicRouter(baseRouter, {
       meta: { requiresAuth: false }
     },
     {
+      path: '/error',
+      name: 'Error',
+      component: () => import('@/views/Error.vue'),
+      meta: { requiresAuth: false }
+    },
+    {
       path: '/:catchAll(.*)',
       component: () => import('@/views/NotFound.vue'),
       meta: { requiresAuth: false }
     }
   ],
   routeLoader: withCache(async () => {
-    // 从服务器获取路由信息
-    return []
+    const userInfo = await info()
+    console.log(userInfo)
+    return userInfo.menus
   }, { ttl: 60000 }),
   authProvider,
   errorHandler: (router, err) => {
-    router.getNavigator().naviToError()
+    router.getNavigator().naviTo("/error")
   },
   eventBusProvider
 })

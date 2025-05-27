@@ -6,12 +6,7 @@ import axios, {
     type CancelTokenSource,
 } from 'axios'
 
-// 定义响应数据结构
-interface ResponseData<T = any> {
-    code: number
-    data: T
-    message?: string
-}
+import type { ResponseData } from '@/types/rim'
 
 // 扩展请求配置类型
 interface RequestConfig extends AxiosRequestConfig {
@@ -105,7 +100,7 @@ class HttpRequest {
      * 统一错误处理
      */
     private handleError(error: AxiosError<ResponseData>) {
-        
+
         const status = error.response?.status
         const message = error.response?.data?.message || error.message
 

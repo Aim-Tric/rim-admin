@@ -8,6 +8,8 @@ import AutoImport from 'unplugin-auto-import/vite'
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
 
+import { viteMockServe } from 'vite-plugin-mock'
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -28,6 +30,12 @@ export default defineConfig({
     }),
     Components({
       resolvers: [NaiveUiResolver()]
+    }),
+    viteMockServe({
+      mockPath: 'src/mock', // mock文件存放目录
+      enable: true,
+      logger: true, // 是否在控制台显示请求日志
+      watchFiles: true // 监视文件更改
     })
   ],
   resolve: {
@@ -42,6 +50,15 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html']
+    }
+  },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, '/api')
+      }
     }
   }
 })

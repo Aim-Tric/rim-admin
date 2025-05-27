@@ -1,4 +1,4 @@
-import type { RouteRecordRaw } from 'vue-router'
+import type { RouteRecordRaw, NavigationGuardNext } from 'vue-router'
 
 declare module 'vue-router' {
   interface RouteMeta {
@@ -11,9 +11,9 @@ declare module 'vue-router' {
 
 export interface Navigator {
   naviTo: (path: string) => void
-  naviToLogin: () => void
-  naviToNoPermission: () => void
-  naviToError: () => void
+  naviToLogin: (next: NavigationGuardNext) => void
+  naviToNoPermission: (next: NavigationGuardNext) => void
+  naviToError: (next: NavigationGuardNext) => void
 }
 
 export interface IDynamicRouter {
@@ -30,7 +30,7 @@ export interface AuthProvider {
   /** 尝试自动登录 */
   tryAutoLogin: () => Promise<boolean>
   /** 调用自动登录失败后回调 */
-  onAuthFailed?: (dynamicRouter: IDynamicRouter) => void
+  onAuthFailed: (dynamicRouter: IDynamicRouter) => void
 }
 
 export interface DynamicRouteOptions {
