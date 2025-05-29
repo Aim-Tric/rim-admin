@@ -42,7 +42,6 @@ export class DynamicRouter implements IDynamicRouter {
     try {
       const loadedRoutes = await this.options.routeLoader!()
       const filteredRoutes = this.options.permissionFilter!(loadedRoutes)
-      console.log("加载路由2")
       filteredRoutes.forEach(route => {
         if (!this.isRouteExists(route)) {
           this.router.addRoute(route)
@@ -50,6 +49,7 @@ export class DynamicRouter implements IDynamicRouter {
       })
 
       this.isRoutesLoaded.value = true
+      console.log("load routes success..")
       return filteredRoutes
     } catch (error) {
       this.options.errorHandler?.(this, error as Error)
@@ -91,7 +91,7 @@ export class DynamicRouter implements IDynamicRouter {
       if (to.name !== 'Login') {
         this.pendingNavigation = to.fullPath
       }
-      console.log(to)
+
       if (to.name == 'Login' || to.name == 'Error') {
         return next()
       }
