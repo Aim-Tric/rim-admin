@@ -1,31 +1,40 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 import type { User } from '@/types/rim'
+import { info } from '@/api/User'
 
 const LOCAL_USER_KEY = "AUTH_USER"
 
 export const useUserStore = defineStore('user', () => {
-    let user = ref<User | undefined>(undefined)
+  let user = ref<User | undefined>(undefined)
 
-    const isAuthenticated = () => {
-        if (user.value != undefined) {
-            return true
-        }
-        let item = localStorage.getItem(LOCAL_USER_KEY)
-        if (item != undefined) {
-            user.value = JSON.parse(item)
-            return true
-        }
-        return false
+  const isAuthenticated = () => {
+    if (user.value != undefined) {
+      return true
     }
-
-    const tryAutoLogin = () => {
-
+    let item = localStorage.getItem(LOCAL_USER_KEY)
+    if (item != undefined) {
+      user.value = JSON.parse(item)
+      return true
     }
+    return false
+  }
 
-    const loadUserInfo = () => {
+  const tryAutoLogin = () => {
 
+  }
+
+  const loadUserInfo = async (): Promise<User | undefined> => {
+    if (user.value != undefined) {
+      return Promise.resolve(user.value)
     }
+    let item = localStorage.getItem(LOCAL_USER_KEY)
+    if (item != undefined) {
+      user.value = JSON.parse(item)
+      return Promise.resolve(user.value)
+    }
+    return info()
+  }
 
-    return { user, isAuthenticated, tryAutoLogin, loadUserInfo }
+  return { user, isAuthenticated, tryAutoLogin, loadUserInfo }
 })
