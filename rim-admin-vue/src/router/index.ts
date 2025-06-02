@@ -1,11 +1,12 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import { DynamicRouter } from '@/plugins/dynamic-router/DynamicRouter'
-import { withCache } from '@/plugins/dynamic-router//RouteCache'
+import { withCache } from '@/plugins/dynamic-router/RouteCache'
 import type { AuthProvider, IDynamicRouter } from '@/plugins/dynamic-router/types'
 import { inject } from 'vue'
 import type { Emitter } from 'mitt'
 
-import { info } from '@/api/User'
+import { useUserStore } from '@/stores/user'
+import type { Menu } from '@/types/rim'
 
 const baseRouter = createRouter({
   history: createWebHistory(),
@@ -50,6 +51,16 @@ const eventBusProvider = {
   }
 }
 
+const buildRoutes = (menus: Menu[]): RouteRecordRaw[] => {
+  const routes: RouteRecordRaw[] = []
+
+  for(let i = 0; i < menus.length; i++) {
+
+  }
+
+  return []
+}
+
 const dynamicRouter = new DynamicRouter(baseRouter, {
   defaultRoutes: [
     {
@@ -83,9 +94,13 @@ const dynamicRouter = new DynamicRouter(baseRouter, {
     }
   ],
   routeLoader: withCache(async () => {
-    const userInfo = await info()
-    console.log(userInfo)
-    return userInfo.menus
+    const { loadUserInfo } = useUserStore()
+    const userInfo = await loadUserInfo()
+    if (userInfo == undefined) {
+      return []
+    }
+    const menus = userInfo.menus!!
+    return buildRoutes(menus)
   }, { ttl: 60000 }),
   authProvider,
   errorHandler: (router, err) => {

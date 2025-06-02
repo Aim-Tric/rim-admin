@@ -32,6 +32,7 @@ export interface Role {
 export interface Menu {
     id?: string
     parentId?: string
+    menuType: number,
     name?: string
     viewPath?: string
     componentSrc?: string
