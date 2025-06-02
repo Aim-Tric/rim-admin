@@ -51,11 +51,42 @@ const eventBusProvider = {
   }
 }
 
+const viewModules = import.meta.glob("@/views/**/*.vue")
+
+const constructRoute = (menu: Menu): RouteRecordRaw => {
+  if (menu.menuType == 2) {
+    return {
+      path: menu.viewPath!!,
+      name: menu.name!!,
+      component: viewModules[menu.viewPath!!]
+    }
+  }
+  // 构造含子页面的路由
+  return {
+    path: menu.viewPath!!,
+    name: menu.name!!,
+    component: viewModules[menu.viewPath!!]
+  }
+}
+
 const buildRoutes = (menus: Menu[]): RouteRecordRaw[] => {
   const routes: RouteRecordRaw[] = []
 
-  for(let i = 0; i < menus.length; i++) {
+  for (let i = 0; i < menus.length; i++) {
+    let menu = menus[i]
+    switch (menu.menuType) {
+      case 0:
 
+        break;
+      case 1:
+
+        break;
+      case 2:
+
+        break;
+      default:
+
+    }
   }
 
   return []
