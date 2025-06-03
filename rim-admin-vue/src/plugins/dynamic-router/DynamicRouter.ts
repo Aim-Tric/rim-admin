@@ -61,13 +61,16 @@ export class DynamicRouter implements IDynamicRouter {
     if (!this.authProvider.isAuthenticated()) {
       await this.authProvider.waitAuthReady(this)
     }
-    return this.loadRoutes()
+    this.loadRoutes()
+    this.attachPendingNavigation()
   }
 
   public attachPendingNavigation() {
     if (this.pendingNavigation) {
       this.router.push(this.pendingNavigation!)
       this.pendingNavigation = null
+    } else {
+      this.router.push("/home")
     }
   }
 
@@ -102,7 +105,11 @@ export class DynamicRouter implements IDynamicRouter {
           await this.loadRoutes()
           this.handlePostLoadNavigation(to, next)
         } catch (error) {
-          this.navigator.naviToError(next)
+          if (to.name !== 'Login') {
+            this.navigator.naviToLogin(next)
+          } else {
+            this.navigator.naviToError(next)
+          }
         }
       }
 
@@ -117,7 +124,11 @@ export class DynamicRouter implements IDynamicRouter {
               await this.loadRoutes()
               this.handlePostLoadNavigation(to, next)
             } catch (error) {
-              this.navigator.naviToError(next)
+              if (to.name !== 'Login') {
+                this.navigator.naviToLogin(next)
+              } else {
+                this.navigator.naviToError(next)
+              }
             }
           }
         }

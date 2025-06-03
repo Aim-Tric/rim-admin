@@ -33,7 +33,9 @@ export const useUserStore = defineStore('user', () => {
       user.value = JSON.parse(item)
       return Promise.resolve(user.value)
     }
-    return info()
+    let u = await info()
+    user.value = u.data
+    return Promise.resolve(user.value)
   }
 
   return { user, isAuthenticated, tryAutoLogin, loadUserInfo }

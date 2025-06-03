@@ -38,5 +38,6 @@ export interface Menu {
     componentSrc?: string
     requireAuth?: boolean
     otherMetas?: Map<String, String>
+    childMenus?: Menu[]
 }
 

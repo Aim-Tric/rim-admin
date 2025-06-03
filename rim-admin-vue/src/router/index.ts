@@ -19,6 +19,7 @@ const authProvider: AuthProvider = {
   isAuthenticated: () => !!localStorage.getItem('token'),
   waitAuthReady: (dynamicRouter: IDynamicRouter) => {
     return new Promise<boolean>(resolve => {
+      console.log("....")
       const check = () => {
         if (localStorage.getItem('token')) {
           resolve(true)
@@ -61,35 +62,32 @@ const constructRoute = (menu: Menu): RouteRecordRaw => {
       component: viewModules[menu.viewPath!!]
     }
   }
+
   // 构造含子页面的路由
+  const childMenus = menu.childMenus
+  const childRoutes = []
+  if (childMenus) {
+    for (let i = 0; i < childMenus.length; i++) {
+      childRoutes.push(constructRoute(childMenus[i]))
+    }
+  }
   return {
     path: menu.viewPath!!,
     name: menu.name!!,
-    component: viewModules[menu.viewPath!!]
+    component: viewModules[menu.viewPath!!],
+    children: [...childRoutes]
   }
 }
 
 const buildRoutes = (menus: Menu[]): RouteRecordRaw[] => {
   const routes: RouteRecordRaw[] = []
-
   for (let i = 0; i < menus.length; i++) {
     let menu = menus[i]
-    switch (menu.menuType) {
-      case 0:
-
-        break;
-      case 1:
-
-        break;
-      case 2:
-
-        break;
-      default:
-
-    }
+    const route = constructRoute(menu)
+    routes.push(route)
   }
 
-  return []
+  return routes
 }
 
 const dynamicRouter = new DynamicRouter(baseRouter, {
@@ -130,6 +128,7 @@ const dynamicRouter = new DynamicRouter(baseRouter, {
     if (userInfo == undefined) {
       return []
     }
+    console.log(userInfo)
     const menus = userInfo.menus!!
     return buildRoutes(menus)
   }, { ttl: 60000 }),

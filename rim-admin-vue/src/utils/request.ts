@@ -76,7 +76,7 @@ class HttpRequest {
 
                 // 自定义状态码处理
                 if (response.data.code !== 0) {
-                    return Promise.reject(response.data)
+                    return Promise.resolve(response.data)
                 }
 
                 return response.data.data
