@@ -19,7 +19,6 @@ const authProvider: AuthProvider = {
   isAuthenticated: () => !!localStorage.getItem('token'),
   waitAuthReady: (dynamicRouter: IDynamicRouter) => {
     return new Promise<boolean>(resolve => {
-      console.log("....")
       const check = () => {
         if (localStorage.getItem('token')) {
           resolve(true)
@@ -52,14 +51,20 @@ const eventBusProvider = {
   }
 }
 
-const viewModules = import.meta.glob("@/views/**/*.vue")
+const viewModulesGlob = import.meta.glob("@/views/**/*.vue")
+const viewModules: Record<string, () => Promise<unknown>> = {}
+for (let k in viewModulesGlob) {
+  let key = k.replace("/src", "")
+  viewModules[key] = viewModulesGlob[k]
+}
 
 const constructRoute = (menu: Menu): RouteRecordRaw => {
+  console.log(menu.componentSrc, viewModules)
   if (menu.menuType == 2) {
     return {
       path: menu.viewPath!!,
       name: menu.name!!,
-      component: viewModules[menu.viewPath!!]
+      component: viewModules[menu.componentSrc!!]
     }
   }
 
@@ -74,7 +79,7 @@ const constructRoute = (menu: Menu): RouteRecordRaw => {
   return {
     path: menu.viewPath!!,
     name: menu.name!!,
-    component: viewModules[menu.viewPath!!],
+    component: viewModules[menu.componentSrc!!],
     children: [...childRoutes]
   }
 }
