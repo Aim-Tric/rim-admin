@@ -28,42 +28,56 @@ export default [
         menus: [
           {
             id: 'string',
-            parentId: 'Root',
-            menuType: 2,
-            name: 'Home',
-            viewPath: '/home',
-            componentSrc: '/views/HomeView.vue',
+            parentId: '',
+            menuType: 0,
+            name: 'Admin',
+            componentSrc: '/layouts/AdminLayout.vue',
             requireAuth: true,
             otherMetas: {
-              title: '主视图',
-              icon: 'home',
-            }
-          },
-          {
-            id: 'string',
-            parentId: 'Root',
-            menuType: 2,
-            name: 'DashBoard',
-            viewPath: '/dashboard',
-            componentSrc: '/views/Dashboard.vue',
-            requireAuth: true,
-            otherMetas: {
-              title: '仪盘表',
-              icon: 'dashboard',
-            }
-          },
-          {
-            id: 'About',
-            parentId: 'Root',
-            menuType: 2,
-            name: 'About',
-            viewPath: '/about',
-            componentSrc: '/views/AboutView.vue',
-            requireAuth: true,
-            otherMetas: {
-              title: '关于',
-              icon: 'about',
-            }
+              title: '管理后台',
+              icon: 'admin',
+            },
+            childMenus: [
+              {
+                id: 'string',
+                parentId: 'Root',
+                menuType: 2,
+                name: 'Home',
+                viewPath: '/home',
+                componentSrc: '/views/HomeView.vue',
+                requireAuth: true,
+                otherMetas: {
+                  title: '家',
+                  icon: 'home',
+                }
+              },
+              {
+                id: 'string',
+                parentId: 'Root',
+                menuType: 2,
+                name: 'DashBoard',
+                viewPath: '/dashboard',
+                componentSrc: '/views/Dashboard.vue',
+                requireAuth: true,
+                otherMetas: {
+                  title: '仪盘表',
+                  icon: 'dashboard',
+                }
+              },
+              {
+                id: 'About',
+                parentId: 'Root',
+                menuType: 2,
+                name: 'About',
+                viewPath: '/about',
+                componentSrc: '/views/AboutView.vue',
+                requireAuth: true,
+                otherMetas: {
+                  title: '关于',
+                  icon: 'about',
+                }
+              }
+            ]
           }
         ]
       }

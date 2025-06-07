@@ -58,8 +58,14 @@ for (let k in viewModulesGlob) {
   viewModules[key] = viewModulesGlob[k]
 }
 
+const layoutModulesGlob = import.meta.glob("@/layouts/**/*.vue")
+const layoutModules: Record<string, () => Promise<unknown>> = {}
+for (let k in layoutModulesGlob) {
+  let key = k.replace("/src", "")
+  layoutModules[key] = layoutModulesGlob[k]
+}
+
 const constructRoute = (menu: Menu): RouteRecordRaw => {
-  console.log(menu.componentSrc, viewModules)
   if (menu.menuType == 2) {
     return {
       path: menu.viewPath!!,
@@ -79,7 +85,7 @@ const constructRoute = (menu: Menu): RouteRecordRaw => {
   return {
     path: menu.viewPath!!,
     name: menu.name!!,
-    component: viewModules[menu.componentSrc!!],
+    component: menu.menuType == 0 ? layoutModules[menu.componentSrc!!] : viewModules[menu.componentSrc!!],
     children: [...childRoutes]
   }
 }
